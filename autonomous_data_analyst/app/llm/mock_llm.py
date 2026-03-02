@@ -1,0 +1,140 @@
+import json
+from typing import Dict, Any
+from app.llm.base_llm import BaseLLM
+
+
+class MockLLM(BaseLLM):
+    """Mock LLM for testing and offline development."""
+    
+    def __init__(self):
+        self.call_count = 0
+    
+    async def generate_response(
+        self,
+        prompt: str,
+        max_tokens: int = 4000,
+        temperature: float = 0.1,
+        **kwargs
+    ) -> str:
+        """Generate a mock response."""
+        self.call_count += 1
+        
+        # Check if this is a planning prompt
+        if "Create a detailed plan to answer the user's question" in prompt:
+            return self._get_mock_plan_response(prompt)
+        
+        # Check if this is a cleaning prompt
+        elif "Create a plan to clean this dataset" in prompt:
+            return self._get_mock_cleaning_response(prompt)
+        
+        # Check if this is a verification prompt
+        elif "critical reviewer of data analysis plans" in prompt:
+            return self._get_mock_verification_response(prompt)
+        
+        # Default mock response
+        return self._get_default_response(prompt)
+    
+    async def generate_structured_response(
+        self,
+        prompt: str,
+        schema: Dict[str, Any],
+        max_tokens: int = 4000,
+        temperature: float = 0.1,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Generate a mock structured response."""
+        response_text = await self.generate_response(
+            prompt=prompt,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            **kwargs
+        )
+        
+        try:
+            return json.loads(response_text.strip())
+        except json.JSONDecodeError:
+            # Return a basic structure if parsing fails
+            return {"response": response_text}
+    
+    def get_token_count(self, text: str) -> int:
+        """Mock token count."""
+        return len(text.split())
+    
+    def estimate_cost(self, prompt: str, response: str) -> float:
+        """Mock cost estimation."""
+        return 0.0
+    
+    def _get_mock_plan_response(self, prompt: str) -> str:
+        """Get mock planning response."""
+        return json.dumps({
+            "steps": [
+                {
+                    "step_id": "step_1",
+                    "step_type": "profile",
+                    "spec": {"operation": "basic_profile"},
+                    "dependencies": []
+                },
+                {
+                    "step_id": "step_2",
+                    "step_type": "analysis",
+                    "spec": {"operation": "descriptive_stats"},
+                    "dependencies": ["step_1"]
+                },
+                {
+                    "step_id": "step_3",
+                    "step_type": "visualization",
+                    "spec": {"chart_type": "histogram", "columns": ["all_numeric"]},
+                    "dependencies": ["step_2"]
+                },
+                {
+                    "step_id": "step_4",
+                    "step_type": "recommendation",
+                    "spec": {"operation": "generate_insights"},
+                    "dependencies": ["step_3"]
+                }
+            ],
+            "estimated_duration": 120,
+            "confidence": 0.85
+        })
+    
+    def _get_mock_cleaning_response(self, prompt: str) -> str:
+        """Get mock cleaning response."""
+        return json.dumps({
+            "steps": [
+                {
+                    "step_id": "clean_1",
+                    "step_type": "clean",
+                    "spec": {
+                        "operations": ["handle_missing_values", "remove_duplicates"],
+                        "missing_strategy": "impute_mean",
+                        "duplicate_subset": None
+                    },
+                    "dependencies": []
+                },
+                {
+                    "step_id": "clean_2",
+                    "step_type": "clean",
+                    "spec": {
+                        "operations": ["fix_data_types", "standardize_formats"],
+                        "type_conversions": {"date_columns": ["date"], "numeric_columns": ["amount"]},
+                        "format_standardization": {"text_columns": ["name", "description"]}
+                    },
+                    "dependencies": ["clean_1"]
+                }
+            ],
+            "estimated_duration": 60,
+            "confidence": 0.9
+        })
+    
+    def _get_mock_verification_response(self, prompt: str) -> str:
+        """Get mock verification response."""
+        return json.dumps({
+            "approved": True,
+            "issues": [],
+            "suggestions": ["Consider adding data validation step"],
+            "modified_plan": None
+        })
+    
+    def _get_default_response(self, prompt: str) -> str:
+        """Get default mock response."""
+        return "This is a mock response from the MockLLM. In a real implementation, this would be generated by an actual language model."

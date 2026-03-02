@@ -1,0 +1,202 @@
+{
+  "info": {
+    "name": "Autonomous Data Analyst API",
+    "description": "API endpoints for the Autonomous Data Analyst platform",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{API_TOKEN}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Dataset Upload",
+      "item": [
+        {
+          "name": "Upload Dataset",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "sample-datasets/sales_messy.csv"
+                },
+                {
+                  "key": "dataset_name",
+                  "value": "Sales Data",
+                  "type": "text"
+                },
+                {
+                  "key": "schema_hints",
+                  "value": "{\"date_columns\": [\"order_date\"], \"numeric_columns\": [\"amount\", \"quantity\"]}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/upload",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "upload"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Data Profiling",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3001/api/profile?dataset_id=demo-dataset-1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "profile"],
+              "query": [
+                {
+                  "key": "dataset_id",
+                  "value": "demo-dataset-1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Data Cleaning",
+      "item": [
+        {
+          "name": "Plan Cleaning",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"dataset_id\": \"demo-dataset-1\", \"auto_detect\": true, \"requested_changes\": \"Remove duplicates and normalize dates\"}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/clean/plan",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "clean", "plan"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Execute Cleaning",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"plan_id\": \"plan-123\", \"apply\": true}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/clean/execute",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "clean", "execute"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Query & Analysis",
+      "item": [
+        {
+          "name": "Submit Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"dataset_id\": \"demo-dataset-1\", \"question\": \"What is the average sales by region?\", \"mode\": \"execute\", \"user_id\": \"user-123\"}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/ask",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "ask"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Audit & Logs",
+      "item": [
+        {
+          "name": "Get Audit Log",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3001/api/audit/log-123",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["api", "audit", "log-123"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "API_TOKEN",
+      "value": "demo-token-123",
+      "type": "string"
+    },
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:3001",
+      "type": "string"
+    }
+  ]
+}

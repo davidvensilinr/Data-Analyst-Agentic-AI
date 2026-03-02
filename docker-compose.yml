@@ -1,0 +1,69 @@
+version: '3.9'
+
+services:
+  # Frontend - Next.js React App
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dataanalyst-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://backend:3001/api
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - dataanalyst-network
+    restart: unless-stopped
+
+  # Mock Backend - Express Server
+  backend:
+    image: node:20-alpine
+    container_name: dataanalyst-backend
+    working_dir: /app
+    command: node mock-backend/server.js
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+    volumes:
+      - ./mock-backend:/app/mock-backend
+      - ./package.json:/app/package.json
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - dataanalyst-network
+    restart: unless-stopped
+
+networks:
+  dataanalyst-network:
+    driver: bridge
+
+# Usage:
+#
+# Start all services:
+#   docker-compose up -d
+#
+# View logs:
+#   docker-compose logs -f
+#   docker-compose logs -f frontend
+#   docker-compose logs -f backend
+#
+# Stop services:
+#   docker-compose down
+#
+# Clean up everything:
+#   docker-compose down -v
+#
+# Access:
+#   Frontend: http://localhost:3000
+#   Backend API: http://localhost:3001/api
+#   Backend Health: http://localhost:3001/api/health
